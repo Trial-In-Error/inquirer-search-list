@@ -15,20 +15,18 @@ interface Event {
 	value: string;
 }
 
+interface Item extends Base.Item {}
+
 // renderer is used to _display_ a row
 type Renderer = (item: Item, isSelected: boolean) => string;
 // filterer is used to _fuzzy search_ a row
 // it's separate from renderer so you can search for non-visible text!
-type Filterer = (item: Item, query: string) => boolean;
+type Filterer = (list: Item[], query: string) => Item[];
 
-interface Item extends Base.Item {
-	id: number;
-}
+const ignoreKeys = ["up", "down"];
 
-const ignoreKeys = ["up", "down", "space"];
-
-function defaultFilterRow(choice: Item, query: string) {
-  return fuzzy.test(query, choice.name);
+function defaultFilterSet(list: Item[], query: string) {
+  return fuzzy.filter(query, list, { extract: (i) => i.name }).map(el => el.original);
 };
 
 function defaultRenderRow(choice: Item, isSelected: boolean) {
@@ -59,18 +57,18 @@ class SearchBox extends Base {
 	private filterList: Item[] = [];
 	private paginator: Paginator = new Paginator();
   private renderRow: Renderer;
-  private filterRow: Filterer;
+  private filterSet: Filterer;
 
 	constructor(...params: Inquirer.Question[]) {
 		super(...params);
-		const { choices, renderRow, filterRow } = this.opt;
+		const { choices, renderRow, filterSet } = this.opt;
 
 		if (!choices) {
 			this.throwParamError("choices");
 		}
 
   	renderRow ? this.renderRow = renderRow : this.renderRow = defaultRenderRow;
-  	filterRow ? this.filterRow = filterRow : this.filterRow = defaultFilterRow;
+  	filterSet ? this.filterSet = filterSet : this.filterSet = defaultFilterSet;
 
 		this.filterList = this.list = choices
 			.filter(() => true) // fix slice is not a function
@@ -104,7 +102,7 @@ class SearchBox extends Base {
 	}
 
 	filterChoices() {
-		this.filterList = this.list.filter((choice) => this.filterRow(choice, this.rl.line));
+		this.filterList = this.filterSet(this.list, this.rl.line);
 	}
 
 	onDownKey() {

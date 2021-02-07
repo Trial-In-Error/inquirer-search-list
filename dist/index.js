@@ -24,8 +24,8 @@ var Paginator = require("inquirer/lib/utils/paginator");
 var chalk_1 = require("chalk");
 var fuzzy = require("fuzzy");
 var ignoreKeys = ["up", "down"];
-function defaultFilterRow(choice, query) {
-    return fuzzy.test(query, choice.name);
+function defaultFilterSet(list, query) {
+    return fuzzy.filter(query, list, { extract: function (i) { return i.name; } }).map(function (el) { return el.original; });
 }
 ;
 function defaultRenderRow(choice, isSelected) {
@@ -57,12 +57,12 @@ var SearchBox = (function (_super) {
         _this.list = [];
         _this.filterList = [];
         _this.paginator = new Paginator();
-        var _a = _this.opt, choices = _a.choices, renderRow = _a.renderRow, filterRow = _a.filterRow;
+        var _a = _this.opt, choices = _a.choices, renderRow = _a.renderRow, filterSet = _a.filterSet;
         if (!choices) {
             _this.throwParamError("choices");
         }
         renderRow ? _this.renderRow = renderRow : _this.renderRow = defaultRenderRow;
-        filterRow ? _this.filterRow = filterRow : _this.filterRow = defaultFilterRow;
+        filterSet ? _this.filterSet = filterSet : _this.filterSet = defaultFilterSet;
         _this.filterList = _this.list = choices
             .filter(function () { return true; })
             .map(function (item, id) { return (__assign({}, item, { id: id })); });
@@ -86,8 +86,7 @@ var SearchBox = (function (_super) {
         this.screen.render(message, bottomContent);
     };
     SearchBox.prototype.filterChoices = function () {
-        var _this = this;
-        this.filterList = this.list.filter(function (choice) { return _this.filterRow(choice, _this.rl.line); });
+        this.filterList = this.filterSet(this.list, this.rl.line);
     };
     SearchBox.prototype.onDownKey = function () {
         var len = this.filterList.length;
