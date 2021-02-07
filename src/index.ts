@@ -41,8 +41,12 @@ function renderChoices(renderRow: Renderer, choices: Item[], pointer: number) {
 	var output = "";
 
 	choices.forEach(function(choice, i) {
-  	output += renderRow(choice, i === pointer);
-		output += "\n";
+    try {
+      output += renderRow(choice, i === pointer);
+      output += "\n";
+    } catch (e) {
+      console.error('Error while rendering row', e)
+    }
 	});
 
 	return output.replace(/\n$/, "");
@@ -102,7 +106,11 @@ class SearchBox extends Base {
 	}
 
 	filterChoices() {
-		this.filterList = this.filterSet(this.list, this.rl.line);
+    try {
+      this.filterList = this.filterSet(this.list, this.rl.line);
+    } catch (e) {
+      console.error('Error while filtering set', e)
+    }
 	}
 
 	onDownKey() {

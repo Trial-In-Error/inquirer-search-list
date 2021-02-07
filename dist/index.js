@@ -39,8 +39,13 @@ function defaultRenderRow(choice, isSelected) {
 function renderChoices(renderRow, choices, pointer) {
     var output = "";
     choices.forEach(function (choice, i) {
-        output += renderRow(choice, i === pointer);
-        output += "\n";
+        try {
+            output += renderRow(choice, i === pointer);
+            output += "\n";
+        }
+        catch (e) {
+            console.error('Error while rendering row', e);
+        }
     });
     return output.replace(/\n$/, "");
 }
@@ -86,7 +91,12 @@ var SearchBox = (function (_super) {
         this.screen.render(message, bottomContent);
     };
     SearchBox.prototype.filterChoices = function () {
-        this.filterList = this.filterSet(this.list, this.rl.line);
+        try {
+            this.filterList = this.filterSet(this.list, this.rl.line);
+        }
+        catch (e) {
+            console.error('Error while filtering set', e);
+        }
     };
     SearchBox.prototype.onDownKey = function () {
         var len = this.filterList.length;
